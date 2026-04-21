@@ -1,0 +1,102 @@
+﻿@page "/users"
+@rendermode InteractiveServer
+@using BlazorLibraryApp.Models
+@using BlazorLibraryApp.Services
+@inject ILibraryService LibraryService
+
+<h3>User Management</h3>
+
+<div class="mb-3">
+    <input class="form-control mb-2" @bind="newUser.Name" placeholder="Enter name" />
+    <input class="form-control mb-2" @bind="newUser.Email" placeholder="Enter email" />
+    <button class="btn btn-primary" @onclick="AddUser">Add User</button>
+</div>
+
+<hr />
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in users)
+        {
+            <tr>
+                <td>@user.Id</td>
+                <td>@user.Name</td>
+                <td>@user.Email</td>
+                <td>
+                    <button class="btn btn-warning btn-sm me-2" @onclick="() => StartEdit(user)">Edit</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => DeleteUser(user.Id)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (editingUser != null)
+{
+    <hr />
+    <h4>Edit User</h4>
+
+    <div class="mb-3">
+        <input class="form-control mb-2" @bind="editingUser.Name" placeholder="Enter name" />
+        <input class="form-control mb-2" @bind="editingUser.Email" placeholder="Enter email" />
+        <button class="btn btn-success me-2" @onclick="SaveEdit">Save Changes</button>
+        <button class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
+    </div>
+}
+
+@code {
+    private List<User> users = new();
+    private User newUser = new();
+    private User? editingUser;
+
+    protected override void OnInitialized()
+    {
+        users = LibraryService.GetUsers();
+    }
+
+    private void AddUser()
+    {
+        LibraryService.AddUser(newUser);
+        newUser = new User();
+        users = LibraryService.GetUsers();
+    }
+
+    private void DeleteUser(int id)
+    {
+        LibraryService.DeleteUser(id);
+        users = LibraryService.GetUsers();
+    }
+
+    private void StartEdit(User user)
+    {
+        editingUser = new User
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Email = user.Email
+        };
+    }
+
+    private void SaveEdit()
+    {
+        if (editingUser != null)
+        {
+            LibraryService.EditUser(editingUser);
+            editingUser = null;
+            users = LibraryService.GetUsers();
+        }
+    }
+
+    private void CancelEdit()
+    {
+        editingUser = null;
+    }
+}

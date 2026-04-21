@@ -1,0 +1,107 @@
+﻿@page "/borrowreturn"
+@rendermode InteractiveServer
+@using BlazorLibraryApp.Models
+@using BlazorLibraryApp.Services
+@inject ILibraryService LibraryService
+
+<h3>Borrow and Return Books</h3>
+
+<h4>Borrow a Book</h4>
+
+<div class="mb-3">
+    <select class="form-select mb-2" @bind="selectedBookId">
+        <option value="0">Select a book</option>
+        @foreach (var book in books)
+        {
+            <option value="@book.Id">@book.Title by @book.Author</option>
+        }
+    </select>
+
+    <select class="form-select mb-2" @bind="selectedUserId">
+        <option value="0">Select a user</option>
+        @foreach (var user in users)
+        {
+            <option value="@user.Id">@user.Name</option>
+        }
+    </select>
+
+    <button class="btn btn-primary" @onclick="BorrowBook">Borrow Book</button>
+</div>
+
+<hr />
+
+<h4>Borrowed Books</h4>
+
+@if (borrowedBooks.Count == 0)
+{
+    <p>No books are currently borrowed.</p>
+}
+else
+{
+    @foreach (var entry in borrowedBooks)
+    {
+        var user = users.FirstOrDefault(u => u.Id == entry.Key);
+
+        <div class="mb-4">
+            <h5>@user?.Name</h5>
+
+            <ul class="list-group">
+                @foreach (var book in entry.Value)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>@book.Title by @book.Author</span>
+                        <button class="btn btn-success btn-sm" @onclick="() => ReturnBook(entry.Key, book.Id)">
+                            Return
+                        </button>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+}
+
+@code {
+    private List<Book> books = new();
+    private List<User> users = new();
+    private Dictionary<int, List<Book>> borrowedBooks = new();
+
+    private int selectedBookId = 0;
+    private int selectedUserId = 0;
+
+    protected override void OnInitialized()
+    {
+        LoadData();
+    }
+
+    private void LoadData()
+    {
+        books = LibraryService.GetBooks();
+        users = LibraryService.GetUsers();
+        borrowedBooks = LibraryService.GetBorrowedBooks();
+    }
+
+    private void BorrowBook()
+    {
+        if (selectedBookId != 0 && selectedUserId != 0)
+        {
+            bool success = LibraryService.BorrowBook(selectedBookId, selectedUserId);
+
+            if (success)
+            {
+                selectedBookId = 0;
+                selectedUserId = 0;
+                LoadData();
+            }
+        }
+    }
+
+    private void ReturnBook(int userId, int bookId)
+    {
+        bool success = LibraryService.ReturnBook(userId, bookId);
+
+        if (success)
+        {
+            LoadData();
+        }
+    }
+}

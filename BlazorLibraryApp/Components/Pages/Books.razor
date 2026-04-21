@@ -1,0 +1,107 @@
+﻿@page "/books"
+@rendermode InteractiveServer
+@using BlazorLibraryApp.Models
+@using BlazorLibraryApp.Services
+@inject ILibraryService LibraryService
+
+<h3>Book Management</h3>
+
+<div class="mb-3">
+    <input class="form-control mb-2" @bind="newBook.Title" placeholder="Enter title" />
+    <input class="form-control mb-2" @bind="newBook.Author" placeholder="Enter author" />
+    <input class="form-control mb-2" @bind="newBook.ISBN" placeholder="Enter ISBN" />
+    <button class="btn btn-primary" @onclick="AddBook">Add Book</button>
+</div>
+
+<hr />
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Author</th>
+            <th>ISBN</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var book in books)
+        {
+            <tr>
+                <td>@book.Id</td>
+                <td>@book.Title</td>
+                <td>@book.Author</td>
+                <td>@book.ISBN</td>
+                <td>
+                    <button class="btn btn-warning btn-sm me-2" @onclick="() => StartEdit(book)">Edit</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => DeleteBook(book.Id)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (editingBook != null)
+{
+    <hr />
+    <h4>Edit Book</h4>
+
+    <div class="mb-3">
+        <input class="form-control mb-2" @bind="editingBook.Title" placeholder="Enter title" />
+        <input class="form-control mb-2" @bind="editingBook.Author" placeholder="Enter author" />
+        <input class="form-control mb-2" @bind="editingBook.ISBN" placeholder="Enter ISBN" />
+        <button class="btn btn-success me-2" @onclick="SaveEdit">Save Changes</button>
+        <button class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
+    </div>
+}
+
+@code {
+    private List<Book> books = new();
+    private Book newBook = new();
+    private Book? editingBook;
+
+    protected override void OnInitialized()
+    {
+        books = LibraryService.GetBooks();
+    }
+
+    private void AddBook()
+    {
+        LibraryService.AddBook(newBook);
+        newBook = new Book();
+        books = LibraryService.GetBooks();
+    }
+
+    private void DeleteBook(int id)
+    {
+        LibraryService.DeleteBook(id);
+        books = LibraryService.GetBooks();
+    }
+
+    private void StartEdit(Book book)
+    {
+        editingBook = new Book
+        {
+            Id = book.Id,
+            Title = book.Title,
+            Author = book.Author,
+            ISBN = book.ISBN
+        };
+    }
+
+    private void SaveEdit()
+    {
+        if (editingBook != null)
+        {
+            LibraryService.EditBook(editingBook);
+            editingBook = null;
+            books = LibraryService.GetBooks();
+        }
+    }
+
+    private void CancelEdit()
+    {
+        editingBook = null;
+    }
+}
