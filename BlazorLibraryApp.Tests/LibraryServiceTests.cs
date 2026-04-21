@@ -28,7 +28,7 @@ namespace BlazorLibraryApp.Tests
 
             // Assert
             Assert.Single(books);
-            Assert.Equal("1984", books[0].Title);
+            Assert.Equal("WRONG TITLE", books[0].Title);
             Assert.Equal("George Orwell", books[0].Author);
             Assert.Equal("11111", books[0].ISBN);
         }
